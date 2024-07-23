@@ -1,0 +1,11 @@
+OS=$(uname -s)
+
+# alias f="fzf --reverse --bind 'enter:execute(xdg-open {} > /dev/null 2>&1),ctrl-y:execute-silent(echo {} | xclip -sel c),ctrl-alt-y:execute-silent(echo `basename {}` | xclip -sel c),ctrl-h:execute-silent(nautilus "`dirname {}`" | xclip -sel c)'"
+
+if [ "$OS" = 'Darwin' ]; then
+
+    fzf --header 'Search files via (in-built) find' --reverse --bind 'enter:execute(xdg-open {} > /dev/null 2>&1),ctrl-y:execute-silent(echo {} | pbcopy),alt-c:execute-silent(echo `basename {}` | pbcopy),ctrl-h:execute-silent(open "`dirname {}`" | pbcopy),del:execute(rm -f {})+reload(find * -type f),ctrl-r:reload(find * -type f)'
+else
+    sh /home/xaph/Dropbox/arcanum/grimoire/common/trash/clean_all_unnecessaries.sh;
+    fzf --header 'Search FILES via (in-built) find' --reverse --bind 'enter:execute(xdg-open {} > /dev/null 2>&1),ctrl-y:execute-silent(echo -n {} | xclip -sel c),alt-c:execute-silent(echo -n `basename {}` | xclip -sel c),ctrl-h:execute-silent(nautilus "`dirname {}`" | xclip -sel c),del:execute(rm -f {})+reload(find * -type f),ctrl-r:reload(find * -type f)'
+fi

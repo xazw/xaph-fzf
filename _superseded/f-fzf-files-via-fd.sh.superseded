@@ -1,0 +1,140 @@
+OS=$(uname -s)
+# alias _fzfd='function _fzfd(){ find /home/xaph/ -type d -not -path "*/.*" -print | fzf --reverse; }; _fzfd'
+
+if [ "$OS" = 'Darwin' ]; then
+
+    _fzf_reload_cache() {
+         fd . /Users/xaph -I -E "venv-*"
+     };
+
+
+
+else
+
+    # https://stackoverflow.com/questions/14612371/how-do-i-run-multiple-background-commands-in-bash-in-a-single-line
+
+    # DOES NOT WORK, so sticking to the in-script approach
+    # source /home/xaph/Dropbox/apps-linux/xaph-bash-fzf-aliases.bashrc
+    # sh /home/xaph/Dropbox/apps-linux/xaph-bash-fzf-aliases.bashrc
+    # [ -f $HOME/Dropbox/apps-linux/xaph-bash-fzf-aliases.bashrc ] && . $HOME/Dropbox/apps-linux/xaph-bash-fzf-aliases.bashrc
+    # source /home/xaph/Dropbox/apps-linux/xaph-bash-fzf-aliases.bashrc
+
+
+    sh /home/xaph/Dropbox/arcanum/grimoire/common/trash/clean_all_unnecessaries.sh;
+
+    _fzf_reload_cache() {
+        fdfind . "$HOME" -I -E "venv-*" --follow > ~/.xaph-fs-cache;
+        # fdfind . "$HOME" -I -E "venv-*" --follow;
+        cp ~/.xaph-fs-cache ~/.xaph-fs;
+        rm ~/.xaph-fs-cache;
+        echo "xaph-cache updated...";
+        echo ~/.xaph-fs
+     };
+
+
+fi
+
+
+if [ "$OS" = 'Darwin' ]; then
+
+    # 30.10.2023 / 01:07:40 - This one is pending a bit of work
+    if [ -e ~/.xaph-fs ];
+    then
+        {(fd . /Users/xaph -I -E "venv-*" -E "/Library/*" > ~/.xaph-fs-cache); # --follow
+        cp ~/.xaph-fs-cache ~/.xaph-fs;
+        rm ~/.xaph-fs-cache;
+        # echo "xaph-cache updated...";
+    }  &
+    else
+        echo "Creating xaph-cache..."
+        fd . /Users/xaph -I -E "venv-*" -E "/Library/*" > ~/.xaph-fs-cache # --follow
+        cp ~/.xaph-fs-cache ~/.xaph-fs;
+    fi
+
+else
+
+    if [ -e ~/.xaph-fs ];
+    then
+        # Since FZF works on cat, this background-updating part is always one-step behind of the most recent files in the filesystem
+        # Run FZF twice to be constantly updated
+        # Since I do open/close FZF throughout the day, there's a chance that unconsciously my filesystem will always be quite updated
+        {
+        echo "Using existing cache...";
+
+    }  &
+
+    else
+        echo "Creating xaph-cache..."
+
+        # To run multiple in background, but fzf will appear empty if so
+        # {
+        # _fzf_reload_cache;
+        # } &
+
+        _fzf_reload_cache;
+        # fzf-reload-cache-all # Cannot work or access this alias
+    fi
+
+fi
+
+modified=`stat ~/.xaph-fs | grep Modify`
+
+
+
+if [ "$OS" = 'Darwin' ]; then
+
+
+
+
+    # fd . /Users/xaph -I -E "venv-*" | fzf --header 'Search FILES via fd
+    # ' --reverse --bind 'enter:execute-silent(setsid xdg-open {}),ctrl-y:execute-silent(echo {} | xclip -sel c)+abort,alt-c:execute-silent(echo `basename {}` | xclip -sel c),ctrl-h:execute-silent(setsid xdg-open "`dirname {}`" | xclip -sel c),ctrl-r:reload(fdfind . /home/xaph -I -E "venv-*" --follow),shift-up:preview-half-page-up,shift-down:preview-half-page-down' --preview-window  'down:wrap:40%,40%,border-bottom,+{2}+3/3,~3' --preview "batcat --color=always `echo '{}' | sed "s/'/\\\'/g"`"
+
+    cat ~/.xaph-fs | fzf --header 'Search FILES via fd
+
+    ' --reverse --bind 'enter:execute(open {} > /dev/null 2>&1)+abort,ctrl-y:execute-silent(echo {} | pbcopy)+abort,alt-c:execute-silent(echo `basename {}` | pbcopy)+abort,ctrl-h:execute-silent(open "`dirname {}`" | pbcopy),del:execute(rm -f {})+reload(fd . /Users/xaph),ctrl-r:reload(fd . /Users/xaph -I -E "venv-*" -E "/Library/*"),shift-up:preview-half-page-up,shift-down:preview-half-page-down' --preview-window 'down:wrap:40%,60%,border-bottom,+{2}+3/3,~3' --preview "bat --color=always `echo '{}' | sed "s/'/\\\'/g"`"
+
+
+    # XAPH-2022-08-15 14:14:23 / Without -I it skips everything set out in gitignore files. Since PDF files are in my gitignore files for my work directories I want them to be indexed. It's still faster than find anyway.
+
+    # wait 2
+    # osascript -e "tell application \"System Events\" to keystroke \"w\" using command down"
+
+
+
+    # tell application "Terminal"
+    #     activate
+    #     windows where name contains "zsh"
+    #     osascript -e "tell application \"System Events\" to keystroke \"w\" using command down"
+
+
+    # end tell
+
+
+else
+
+
+
+    # alias x="_fzf_reload_cache"
+
+
+    # fdfind . /home/xaph -I -E "venv-*"
+
+    # cat ~/.xaph-fs | fzf --header 'Search FILES via fd
+    # fdfind . /home/xaph -I -E "venv-*" --follow | fzf --header 'Search FILES via FD
+
+    cat ~/.xaph-fs | fzf --header 'Search FILES via fd
+
+    ' --reverse --bind 'enter:execute-silent(setsid xdg-open {} &),ctrl-y:execute-silent(echo -n {} | xclip -sel c)+abort,alt-c:execute-silent(echo -n `basename {}` | xclip -sel c)+abort,ctrl-h:execute-silent(setsid xdg-open "`dirname {}`" | xclip -sel c),ctrl-r:reload(fdfind . /home/xaph -I -E "venv-*" --follow;),shift-up:preview-half-page-up,shift-down:preview-half-page-down' --preview-window  'down:wrap:40%,40%,border-bottom,+{2}+3/3,~3' --preview "batcat --color=always `echo '{}' | sed "s/'/\\\'/g"`"
+    # ' --reverse --bind 'enter:execute-silent(setsid xdg-open {}),ctrl-y:execute-silent(echo {} | xclip -sel c)+abort,alt-c:execute-silent(echo `basename {}` | xclip -sel c),ctrl-h:execute-silent(setsid xdg-open "`dirname {}`" | xclip -sel c),ctrl-r:reload(fdfind . /home/xaph -I -E "venv-*" --follow),shift-up:preview-half-page-up,shift-down:preview-half-page-down' --preview-window  'down:wrap:40%,40%,border-bottom,+{2}+3/3,~3' --preview "batcat --color=always `echo '{}' | sed "s/'/\\\'/g"`"
+    # del:execute(rm -f {})+reload(fdfind . /home/xaph)
+
+
+
+
+    # FOR REFERENCE ONLY - 20221204-234527
+    # 1. Tip on setsid, found from searching about asynchronous executions/commands as a background process - https://github.com/gokcehan/lf/issues/233#issuecomment-536303822
+    # 2. FAILED - enter:execute-silent(nohup `xdg-open {}` &)+abort
+    # 3. I am currently disabling abort on execute, just to be able to go back and forth, since I can now open VLC separately from the FZF terminal Window
+
+
+fi
