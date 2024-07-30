@@ -86,6 +86,9 @@ def update_cache(
 ):
     """
 
+    TODO: The cache update can be done WITHIN the program, or EXTERNAL to it.
+    (In the latter case it should run as a background process, rather than something that can hold up the main thread.)
+
     :param message:
     :param dump_to_fzf: If true, then print to FZF, instead of saving to disk
     :param folder: Whether to search for folders or files
@@ -192,7 +195,8 @@ attr_common_preview_opts_mac = (
 )
 
 if __name__ == "__main__":
-    # This section is only called if doing reloads from within FZF itself.
+    # This section is generally only called if doing reloads from within FZF itself (for CTRL-R shortcuts), or through crontab.
+
     if args.folder:
         if args.write:
             update_cache(dump_to_fzf=False, folder=True)
@@ -201,3 +205,33 @@ if __name__ == "__main__":
         if args.write:
             update_cache(dump_to_fzf=False, folder=False)
         update_cache(dump_to_fzf=True, folder=False)
+
+
+def create_things(created_folders, created_files):
+    if created_folders:
+        # threading.Thread(
+        #     target=update_cache,
+        #     kwargs={"dump_to_fzf": False, "folder": True, "location": folder_to_search},
+        # ).start()
+        update_cache(
+            dump_to_fzf=False,
+            folder=True,
+            location=folder_to_search,
+        )
+
+    if created_files:
+        # threading.Thread(
+        # target=update_cache,
+        # kwargs={
+        # "dump_to_fzf": False,
+        # "folder": False,
+        # "location": folder_to_search,
+        # },
+        # ).start()
+        update_cache(
+            dump_to_fzf=False,
+            folder=False,
+            location=folder_to_search,
+        )
+        # os.system('python -c /home/xaph/Dropbox/arcanum/grimoire/common/fzf/fzf_reloader.py')
+        # pass

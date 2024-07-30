@@ -3,7 +3,6 @@ import os
 import platform
 import subprocess
 import sys
-import threading
 import time
 
 from fzf_reloader import (
@@ -11,7 +10,6 @@ from fzf_reloader import (
     XAPH_FS_FILES,
     DEFAULT_LINUX_SEARCH_FOLDER,
     DEFAULT_MAC_SEARCH_FOLDER,
-    folder_to_search,
     args,
     update_cache,
     _base_common_summons,
@@ -32,7 +30,7 @@ from fzf_reloader import (
     attr_reload_folders_linux,
     attr_reload_folders_mac,
     attr_common_shift_page,
-    attr_common_preview_window,
+    attr_common_preview_window, create_things,
 )
 
 time_start = time.time()
@@ -56,7 +54,7 @@ if args.folder:
     elif os.path.exists(os.path.expanduser(XAPH_FS_FOLDERS)):
         created_folders = True
     else:
-        update_cache("Create", dump_to_fzf=True, folder=True)
+        update_cache("Update FZF with folder cache", dump_to_fzf=True, folder=True)
 
 else:
     if args.specific_location:
@@ -70,36 +68,36 @@ else:
     elif os.path.exists(os.path.expanduser(XAPH_FS_FILES)):
         created_files = True
     else:
-        update_cache("Create", dump_to_fzf=True, folder=False)
+        update_cache("Update FZF with files cache", dump_to_fzf=True, folder=False)
 
 if platform.system() == "Darwin":
     combined_string = (
-        (_base_common_summons if not args.folder else _base_common_summons_folders)
-        + " '"
-        + attr_enter_mac
-        + attr_copy_mac
-        + attr_copy_folder_mac
-        + attr_open_folder_mac
-        # + attr_del_mac
-        + (attr_reload_mac if not args.folder else attr_reload_folders_mac)
-        + attr_common_shift_page
-        + "' "
-        + attr_common_preview_window
-        + attr_common_preview_opts_mac
+            (_base_common_summons if not args.folder else _base_common_summons_folders)
+            + " '"
+            + attr_enter_mac
+            + attr_copy_mac
+            + attr_copy_folder_mac
+            + attr_open_folder_mac
+            # + attr_del_mac
+            + (attr_reload_mac if not args.folder else attr_reload_folders_mac)
+            + attr_common_shift_page
+            + "' "
+            + attr_common_preview_window
+            + attr_common_preview_opts_mac
     )
 else:
     combined_string = (
-        (_base_common_summons if not args.folder else _base_common_summons_folders)
-        + " '"
-        + attr_enter_linux
-        + attr_copy_linux
-        + attr_copy_folder_linux
-        + attr_open_folder_linux
-        + (attr_reload_linux if not args.folder else attr_reload_folders_linux)
-        + attr_common_shift_page
-        + "' "
-        + attr_common_preview_window
-        + attr_common_preview_opts_linux
+            (_base_common_summons if not args.folder else _base_common_summons_folders)
+            + " '"
+            + attr_enter_linux
+            + attr_copy_linux
+            + attr_copy_folder_linux
+            + attr_open_folder_linux
+            + (attr_reload_linux if not args.folder else attr_reload_folders_linux)
+            + attr_common_shift_page
+            + "' "
+            + attr_common_preview_window
+            + attr_common_preview_opts_linux
     )
 
 print(f"CMD: '{combined_string}'\n")
@@ -107,7 +105,6 @@ print(f"CMD: '{combined_string}'\n")
 subprocess.run(
     combined_string, shell=True
 )  # No need to use threading.Thread(target=os.system, args=[combined_string]).start()
-
 
 # ON CLOSE
 # Always restore upon proper close, whether using specific location or not
@@ -124,32 +121,6 @@ else:
     folder_to_search = None
 
 if args.write:
-    if created_folders:
-        # threading.Thread(
-        #     target=update_cache,
-        #     kwargs={"dump_to_fzf": False, "folder": True, "location": folder_to_search},
-        # ).start()
-        update_cache(
-            dump_to_fzf=False,
-            folder=True,
-            location=folder_to_search,
-        )
-
-    if created_files:
-        # threading.Thread(
-        # target=update_cache,
-        # kwargs={
-        # "dump_to_fzf": False,
-        # "folder": False,
-        # "location": folder_to_search,
-        # },
-        # ).start()
-        update_cache(
-            dump_to_fzf=False,
-            folder=False,
-            location=folder_to_search,
-        )
-        # os.system('python -c /home/xaph/Dropbox/arcanum/grimoire/common/fzf/fzf_reloader.py')
-        # pass
+    create_things(created_folders, created_files)
 
 print(f"Time in XAPH-FZF: {(time.time() - time_start):.2f}s\n")
