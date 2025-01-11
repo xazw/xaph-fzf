@@ -92,7 +92,7 @@ if __name__ == "__main__":
     if args.folder:
         if args.specific_location:
             update_cache(
-                "Create specific",
+                "Create specific folders",
                 print_to_fzf=False,
                 folder=True,
                 location=args.specific_location,
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     else:
         if args.specific_location:
             update_cache(
-                "Create specific",
+                "Create specific files",
                 print_to_fzf=False,
                 folder=False,
                 location=args.specific_location,
