@@ -1,3 +1,6 @@
 .idea/
 sample-data/
 .DS_Store
+*.zip
+.gitignore
+*.pyc
