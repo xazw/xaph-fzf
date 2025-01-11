@@ -34,6 +34,12 @@ parser.add_argument(
     help="Allow multiple selections",
 )
 parser.add_argument(
+    "--fdcron",
+    action="store_true",
+    default=False,
+    help="Use different alias for running fd via crontab (primarily on the Mac)",
+)
+parser.add_argument(
     "--specific-location",
     help="Filter for files (not folders) within specific locations",
     # NOTE: I will not support looking for a specific folder within folders, not necessary
@@ -53,7 +59,10 @@ else:
 
 
 if platform.system() == "Darwin":
-    fd = "fd"
+    if args.fdcron:
+        fd = "/opt/homebrew/bin/fd"
+    else:
+        fd = "fd"
     clipboard_handler = "pbcopy"
     exclude_folders = ["-E 'venv-*'", "-E '/Library/*'"]
     SEARCH_STRING = fd + f"  . {folder_to_search} -I " + " ".join(exclude_folders)
