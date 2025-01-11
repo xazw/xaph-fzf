@@ -1,4 +1,13 @@
 #!/usr/local/bin/python3.10
+"""
+
+This script is particularly useful for:
+
+- An interactive alternative to STX's line filter.
+- Document browsing, where each line is meaningful (e.g. maxims, lyrics, books, etc).
+
+
+"""
 
 import os
 import subprocess

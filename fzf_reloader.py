@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+"""
+This script is only called for within FZF itself (CTRL-R shortcuts), or through crontab.
+"""
+
 import argparse
 import os
 import re
@@ -8,46 +12,14 @@ import platform
 
 # import pyperclip
 
-XAPH_FS_FILES = "~/.xaph-fs"
-XAPH_FS_FOLDERS = "~/.xaph-fsd"
-DEFAULT_MAC_SEARCH_FOLDER = "/Users/xaph"
-DEFAULT_LINUX_SEARCH_FOLDER = "$HOME"
 
-time_start = time.time()
-parser = argparse.ArgumentParser(prog="XAPH-FZF")
-parser.add_argument(
-    "--folder",
-    action="store_true",
-    default=False,
-    help="Filter for folders (otherwise search only files)",
+from settings import (
+    args,
+    XAPH_FS_FOLDERS,
+    XAPH_FS_FILES,
+    DEFAULT_LINUX_SEARCH_FOLDER,
+    DEFAULT_MAC_SEARCH_FOLDER,
 )
-parser.add_argument(
-    "--write",
-    action="store_true",
-    default=False,
-    help="Write reload to disk",
-)
-parser.add_argument(
-    "--multi",
-    action="store_true",
-    default=False,
-    help="Allow multiple selections",
-)
-parser.add_argument(
-    "--fdcron",
-    action="store_true",
-    default=False,
-    help="Use different alias for running fd via crontab (primarily on the Mac)",
-)
-parser.add_argument(
-    "--specific-location",
-    help="Filter for files (not folders) within specific locations",
-    # NOTE: I will not support looking for a specific folder within folders, not necessary
-)
-
-args = parser.parse_args()
-# pyperclip.copy(f"{args.folder=} {args=}")
-
 
 if args.specific_location:
     folder_to_search = args.specific_location
@@ -87,19 +59,19 @@ else:
 
 def update_cache(
     message: str = "Update",
-    dump_to_fzf=False,
+    print_to_fzf=False,
     folder=True,
     location=None,
     search_string=SEARCH_STRING,
     search_string_folder=SEARCH_STRING_FOLDER,
 ):
     """
-
-    TODO: The cache update can be done WITHIN the program, or EXTERNAL to it.
-    (In the latter case it should run as a background process, rather than something that can hold up the main thread.)
+    - For convenience, the same function has two functions: it outputs the results either directly to the terminal (the running FZF instance), or saves them to a specified file.
+    - The function updates a cache file, by running search commands against files or folders.
+    - The cache update can be called from within the script, or run through the CLI (which then makes it amenable to cron usage).
 
     :param message:
-    :param dump_to_fzf: If true, then print to FZF, instead of saving to disk
+    :param print_to_fzf: If true, then print to FZF, instead of saving to disk
     :param folder: Whether to search for folders or files
     :param location: Specific location to use for search, in tandem with args.specific_location
     :param search_string: For files, replaceable by location
@@ -109,7 +81,7 @@ def update_cache(
 
     time_cache_start = time.time()
 
-    if not dump_to_fzf:
+    if not print_to_fzf:
         if folder:
             print(
                 f"{message} at {XAPH_FS_FOLDERS}... {location if location else 'Default location'}"
@@ -125,16 +97,16 @@ def update_cache(
         search_string = re.sub(folder_to_search, location, search_string)
         search_string_folder = re.sub(folder_to_search, location, search_string_folder)
 
-    if folder and dump_to_fzf:
+    if folder and print_to_fzf:
         os.system(search_string_folder)
-    elif folder and (dump_to_fzf is False):
+    elif folder and (print_to_fzf is False):
         os.system(f"{search_string_folder} > {XAPH_FS_FOLDERS}")
-    elif (folder is False) and dump_to_fzf:
+    elif (folder is False) and print_to_fzf:
         os.system(search_string)
-    elif (folder is False) and (dump_to_fzf is False):
+    elif (folder is False) and (print_to_fzf is False):
         os.system(f"{search_string} > {XAPH_FS_FILES}")
 
-    if not dump_to_fzf:
+    if not print_to_fzf:
         print(f"Time to update cache: {(time.time() - time_cache_start):.2f}s\n")
 
 
@@ -204,43 +176,12 @@ attr_common_preview_opts_mac = (
 )
 
 if __name__ == "__main__":
-    # This section is generally only called if doing reloads from within FZF itself (for CTRL-R shortcuts), or through crontab.
 
     if args.folder:
         if args.write:
-            update_cache(dump_to_fzf=False, folder=True)
-        update_cache(dump_to_fzf=True, folder=False)
+            update_cache(print_to_fzf=False, folder=True)
+        update_cache(print_to_fzf=True, folder=False)
     else:
         if args.write:
-            update_cache(dump_to_fzf=False, folder=False)
-        update_cache(dump_to_fzf=True, folder=False)
-
-
-def create_things(created_folders, created_files):
-    if created_folders:
-        # threading.Thread(
-        #     target=update_cache,
-        #     kwargs={"dump_to_fzf": False, "folder": True, "location": folder_to_search},
-        # ).start()
-        update_cache(
-            dump_to_fzf=False,
-            folder=True,
-            location=folder_to_search,
-        )
-
-    if created_files:
-        # threading.Thread(
-        # target=update_cache,
-        # kwargs={
-        # "dump_to_fzf": False,
-        # "folder": False,
-        # "location": folder_to_search,
-        # },
-        # ).start()
-        update_cache(
-            dump_to_fzf=False,
-            folder=False,
-            location=folder_to_search,
-        )
-        # os.system('python -c /home/xaph/Dropbox/arcanum/grimoire/common/fzf/fzf_reloader.py')
-        # pass
+            update_cache(print_to_fzf=False, folder=False)
+        update_cache(print_to_fzf=True, folder=False)
