@@ -3,9 +3,11 @@
 """
 - This script is meant for launching with Ulauncher, Alfred, i3, or a CLI terminal.
 - It is not meant for cron-scripts or reloads within FZF.
+- Use 'fzfs' (location-specific shorthand) compared to the general launcher as need be.
 
 - Script is VERY tightly coupled to the reloader; this is intentional, and specific to  this script.
   It calls to various parts of the reloader outside of its main() function.
+
 
 """
 
