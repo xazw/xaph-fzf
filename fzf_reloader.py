@@ -10,8 +10,6 @@ import re
 import time
 import platform
 
-# import pyperclip
-
 
 from settings import (
     args,
@@ -36,7 +34,10 @@ if platform.system() == "Darwin":
     else:
         fd = "fd"
     clipboard_handler = "pbcopy"
-    exclude_folders = ["-E 'venv-*'", "-E '/Library/*'"]
+    exclude_folders = [
+        "-E 'venv-*'",
+        "-E '/Library/*'",
+    ]
     SEARCH_STRING = fd + f"  . {folder_to_search} -I " + " ".join(exclude_folders)
     SEARCH_STRING_FOLDER = (
         fd + " -t d" + f" . {folder_to_search} -I " + " ".join(exclude_folders)
@@ -44,7 +45,11 @@ if platform.system() == "Darwin":
 else:
     fd = "fdfind"
     clipboard_handler = "xclip -sel c"
-    exclude_folders = ["-E 'venv-*'"]
+    exclude_folders = [
+        "-E 'venv-*'",
+        # fdfind expects relative paths, so be mindful with this and i3
+        f" -E '{args.exclude_folders}' " if args.exclude_folders else "",
+    ]
     SEARCH_STRING = (
         fd + f"  . {folder_to_search} -I " + " ".join(exclude_folders) + " --follow"
     )

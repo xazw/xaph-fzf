@@ -16,6 +16,10 @@ parser.add_argument(
     help="Filter for specific folders (otherwise filter for all files).",
 )
 parser.add_argument(
+    "--exclude-folders",
+    default=None,
+)
+parser.add_argument(
     "--write",
     action="store_true",
     default=False,
