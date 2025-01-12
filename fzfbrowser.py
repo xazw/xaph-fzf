@@ -56,7 +56,11 @@ def get_text_data(args) -> str:
     for fp in args.files:
         fp_id = abbreviate_book_title(fp)
         with open(fp, "r", encoding="utf8") as f:
-            text: [str] = [f"[[{fp_id}]] {l}" for l in f.readlines() if l.strip() != ""]
+            text: [str] = [
+                f"[[{fp_id}/{l_no:05d}]] {l}"
+                for l_no, l in enumerate(f.readlines())
+                if l.strip() != ""
+            ]
             text_all.extend(text)
 
     text_without_newlines: str = "".join(
