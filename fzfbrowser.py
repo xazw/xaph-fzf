@@ -74,10 +74,26 @@ def pipe_data_into_fzf(piped_data):
     # Word-boundary wrapping not available
     batcat_opts = "-l md --terminal-width 100 --color=always"
 
+    if platform.system() == "Darwin":
+        clipboard_handler = "pbcopy"
+        attr_copy_ctrl_y = (
+            f"""ctrl-y:execute-silent(echo {{}} | {clipboard_handler})+abort,"""
+            f"""enter:execute-silent(echo {{}} | {clipboard_handler})+abort"""
+        )
+    else:
+        clipboard_handler = "xclip -sel c"
+        attr_copy_ctrl_y = (
+            f"""ctrl-y:execute-silent(echo -n {{}} | {clipboard_handler})+abort,"""
+            f"""enter:execute-silent(echo {{}} | {clipboard_handler})+abort"""
+        )
+
     if args.disable_copy:
         _binder = []
     else:
-        _binder = ["--bind", """enter:execute-silent(echo {} | xclip -sel c)+abort"""]
+        _binder = [
+            "--bind",
+            attr_copy_ctrl_y,
+        ]
 
     call_string = [
         "--reverse",
