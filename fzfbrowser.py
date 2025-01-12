@@ -27,18 +27,40 @@ argparse = argparse.ArgumentParser(
     prog="xaph's FZFR - Fuzzy Review / Content Browser",
     description="""Used for single documents. To be used together with FZFC (spanning multiple documents).""",
 )
-argparse.add_argument("file", help="Single file to read")
+argparse.add_argument(
+    "files", help="Browse through single or multiple files.", nargs="+", default=None
+)
+argparse.add_argument(
+    "--folder",
+    action="store_true",
+    default=False,
+    help="Filter for specific folders (otherwise filter for all files).",
+)
+argparse.add_argument(
+    "--exclude-folders",
+    default=None,
+)
 argparse.add_argument("--disable-copy", action="store_true", default=False)
 args = argparse.parse_args()
 
 
+def abbreviate_book_title(fp):
+    fn = os.path.splitext(os.path.basename(fp))[0].upper()
+    return "".join(i[0] for i in fn.split(" "))
+
+
 def get_text_data(args) -> str:
 
-    with open(args.file, "r", encoding="utf8") as f:
-        text = f.readlines()
+    text_all: [str] = []
+
+    for fp in args.files:
+        fp_id = abbreviate_book_title(fp)
+        with open(fp, "r", encoding="utf8") as f:
+            text: [str] = [f"[[{fp_id}]] {l}" for l in f.readlines() if l.strip() != ""]
+            text_all.extend(text)
 
     text_without_newlines: str = "".join(
-        l for l in text if l.replace("\n", "").strip() != ""
+        l for l in text_all if l.replace("\n", "").strip() != ""
     )
 
     return text_without_newlines
@@ -48,6 +70,8 @@ def pipe_data_into_fzf(piped_data):
     _sed_dot_to_newline = r"""sed "s/\. /\.\\n\\n/g" """
     _sed_dot_bold_to_newline = r"""sed "s/\.\*\* /\.\*\*\\n\\n/g" """
     opt_seds = "|".join([_sed_dot_to_newline, _sed_dot_bold_to_newline])
+
+    # Word-boundary wrapping not available
     batcat_opts = "-l md --terminal-width 100 --color=always"
 
     if args.disable_copy:
@@ -65,7 +89,8 @@ def pipe_data_into_fzf(piped_data):
         "--preview",
         # """echo {} | sed "s/'./'/g" | batcat -l md --color=always""",
         # """echo {} | tr '.' '\n' | batcat -l md --color=always""",
-        rf"""echo {{}} | {opt_seds}  | fold -w 80 -s | {bat_location} {batcat_opts}""",  # Newlines added for reading purposes, but copy ignores newlines
+        # Newlines added for reading purposes, but copy ignores newlines. `fold` might actually be redundant, but leaving this here for now.
+        rf"""echo {{}} | {opt_seds}  | fold -w 80 -s | {bat_location} {batcat_opts}""",
     ]
 
     output = subprocess.run(
@@ -75,10 +100,11 @@ def pipe_data_into_fzf(piped_data):
     )
 
 
-if args.file:
-    if not os.path.exists(args.file):
-        print(f"Filepath does not exist: {os.path.basename(args.file)}")
-        sys.exit()
+if args.files:
+    for file in args.files:
+        if not os.path.exists(file):
+            print(f"Filepath does not exist: {os.path.basename(args.file)}")
+            sys.exit()
 
 
 if __name__ == "__main__":
